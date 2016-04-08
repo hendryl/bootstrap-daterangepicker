@@ -312,6 +312,7 @@ $daterangepicker-ranges-active-border-radius: $daterangepicker-border-radius !de
       
       border-radius: 0 $daterangepicker-cell-border-radius $daterangepicker-cell-border-radius 0;
       border-right: ($daterangepicker-cell-border-size*2) solid $daterangepicker-active-border-color; 
+      padding-right: 4px;
     }
   
     &.start-date {
