@@ -267,6 +267,9 @@
         if (typeof options.alwaysShowCalendars === 'boolean')
             this.alwaysShowCalendars = options.alwaysShowCalendars;
 
+        if (typeof options.customDateClassname === 'function')
+            this.customDateClassname = options.customDateClassname;
+
         // update day names order to firstDay
         if (this.locale.firstDay != 0) {
             var iterator = this.locale.firstDay;
@@ -525,6 +528,10 @@
                     return dateStart;
                 }
             }
+        },
+
+        customDateClassname: function() {
+            return false;
         },
 
         updateView: function() {
@@ -818,6 +825,15 @@
                     //highlight dates in-between the selected dates
                     if (this.endDate != null && calendar[row][col] > this.startDate && calendar[row][col] < this.endDate)
                         classes.push('in-range');
+
+                    //get extra/cutsom classnames and concat them
+                    var extraclassnames;
+                    if (false !== (extraclassnames = this.customDateClassname(calendar[row][col]))) {
+                        if(typeof extraclassnames === 'string')
+                            extraclassnames = [extraclassnames];
+
+                        classes = classes.concat(extraclassnames);
+                    }
 
                     var cname = '', disabled = false;
                     for (var i = 0; i < classes.length; i++) {
