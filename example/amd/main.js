@@ -39,6 +39,9 @@ $(document).ready(function() {
     if ($('#singleDatePicker').is(':checked'))
       options.singleDatePicker = true;
 
+    if ($('#selectPastInvalidDate').is(':checked'))
+      options.selectPastInvalidDate = false;
+
     if ($('#showDropdowns').is(':checked'))
       options.showDropdowns = true;
 
@@ -130,6 +133,10 @@ $(document).ready(function() {
 
     if ($('#cancelClass').val().length && $('#cancelClass').val() != 'btn-default')
       options.cancelClass = $('#cancelClass').val();
+
+    options.isInvalidDate = function(date) {
+      return moment(date).format('YYYY-MM-DD') === '2016-07-17';
+    }
 
     $('#config-text').val("$('#demo').daterangepicker(" + JSON.stringify(options, null, '    ') + ", function(start, end, label) {\n  console.log(\"New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')\");\n});");
 

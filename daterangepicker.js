@@ -46,6 +46,7 @@
         this.timePickerIncrement = 1;
         this.timePickerSeconds = false;
         this.linkedCalendars = true;
+        this.selectPastInvalidDate = true;
         this.autoUpdateInput = true;
         this.alwaysShowCalendars = false;
         this.ranges = {};
@@ -259,6 +260,9 @@
 
         if (typeof options.isCustomDate === 'function')
             this.isCustomDate = options.isCustomDate;
+
+        if (typeof options.selectPastInvalidDate === 'boolean')
+            this.selectPastInvalidDate = options.selectPastInvalidDate;
 
         if (typeof options.alwaysShowCalendars === 'boolean')
             this.alwaysShowCalendars = options.alwaysShowCalendars;
@@ -517,6 +521,21 @@
 
         isCustomDate: function() {
             return false;
+        },
+
+        firstInvalidDate: function(dateStart, dateEnd) {
+            if(dateStart > dateEnd) {
+                return false;
+            }
+
+            dateStart = dateStart.clone();
+
+            while(dateStart < dateEnd) {
+                dateStart.add(1, 'days');
+                if(this.isInvalidDate(dateStart)) {
+                    return dateStart;
+                }
+            }
         },
 
         updateView: function() {
@@ -1250,17 +1269,32 @@
             var cal = $(e.target).parents('.calendar');
             var date = cal.hasClass('left') ? this.leftCalendar.calendar[row][col] : this.rightCalendar.calendar[row][col];
 
-            if (this.endDate && !this.container.find('input[name=daterangepicker_start]').is(":focus")) {
+            var setStartDate = function(date) {
                 this.container.find('input[name=daterangepicker_start]').val(date.format(this.locale.format));
-            } else if (!this.endDate && !this.container.find('input[name=daterangepicker_end]').is(":focus")) {
+            }.bind(this);
+
+            var setEndDate = function(date) {
                 this.container.find('input[name=daterangepicker_end]').val(date.format(this.locale.format));
+            }.bind(this);
+
+            if (this.endDate) {
+                setStartDate(date);
+            } else {
+                setEndDate(date);
             }
 
             //highlight the dates between the start date and the date being hovered as a potential end date
             var leftCalendar = this.leftCalendar;
             var rightCalendar = this.rightCalendar;
             var startDate = this.startDate;
+            if(!this.selectPastInvalidDate) {
+                var rangemax = this.firstInvalidDate(startDate, date);
+                var bfRangemax = rangemax ? rangemax.clone().subtract(1, 'days') : false;
+            }
+
             if (!this.endDate) {
+                var _this = this;
+
                 this.container.find('.calendar td').each(function(index, el) {
 
                     //skip week numbers, only look at dates
@@ -1273,9 +1307,23 @@
                     var dt = cal.hasClass('left') ? leftCalendar.calendar[row][col] : rightCalendar.calendar[row][col];
 
                     if ((dt.isAfter(startDate) && dt.isBefore(date)) || dt.isSame(date, 'day')) {
+                        if(!_this.selectPastInvalidDate) {
+                            if (bfRangemax
+                                && dt.format('DD-MM-YYYY') == bfRangemax.format('DD-MM-YYYY')
+                            ) {
+                                $(el).addClass('in-range-end');
+                            }
+
+                            if (rangemax && dt.isAfter(rangemax)) {
+                                setEndDate(bfRangemax);
+                                return;
+                            }
+                        }
+
                         $(el).addClass('in-range');
                     } else {
                         $(el).removeClass('in-range');
+                        $(el).removeClass('in-range-end');
                     }
 
                 });
@@ -1336,7 +1384,16 @@
                     var second = this.timePickerSeconds ? parseInt(this.container.find('.right .secondselect').val(), 10) : 0;
                     date = date.clone().hour(hour).minute(minute).second(second);
                 }
-                this.setEndDate(date.clone());
+
+                var rangemax = !this.selectPastInvalidDate ?
+                    this.firstInvalidDate(this.startDate, date) : false;
+
+                if(rangemax) {
+                    this.setEndDate(rangemax.subtract(1, 'days'));
+                } else {
+                    this.setEndDate(date.clone());
+                }
+
                 if (this.autoApply) {
                   this.calculateChosenLabel();
                   this.clickApply();
