@@ -105,6 +105,13 @@
     border-color: transparent;
     color: #000;
     border-radius: 0; }
+  .daterangepicker td.in-range-end {
+    background-color: #ebf4f8;
+    border-color: transparent;
+    color: #000;
+    border-radius: 0 4px 4px 0; 
+    border-right: 2px solid #357ebd;
+    padding-right: 4px; }
   .daterangepicker td.start-date {
     border-radius: 4px 0 0 4px; }
   .daterangepicker td.end-date {
